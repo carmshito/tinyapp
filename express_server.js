@@ -17,6 +17,12 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+// function to generate random short URL
+
+const generateRandomString = function() {
+  return Math.random().toString(36).substring(2, 8);
+};
+
 // GET - display URL index
 
 app.get("/urls", (req, res) => {
