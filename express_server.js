@@ -2,9 +2,11 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+// MIDDLEWARE
+
 app.set("view engine", "ejs");
 
-// app.use(express.urlencoded({ extended: true}));
+app.use(express.urlencoded({ extended: true}));
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -15,27 +17,27 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-// display URL index
+// GET - display URL index
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
-// display new URL submission
+// GET - display new URL submission
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-// display single URL
+// GET - display single URL
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]};
   res.render("urls_show", templateVars);
 });
 
-// post route to receive form submission
+// POST - receive form submission
 
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
