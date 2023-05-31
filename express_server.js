@@ -60,10 +60,19 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-// POST - removes a URL
+// POST - deletes a URL
 
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   delete urlDatabase[id];
+  res.redirect("/urls");
+});
+
+// POST - updates a URL resource
+
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  const updatedURL = req.body.updatedURL;
+  urlDatabase[id] = updatedURL;
   res.redirect("/urls");
 });
