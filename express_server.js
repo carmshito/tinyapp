@@ -67,6 +67,15 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+// GET - register new users
+
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render("urls_registration", templateVars);
+});
+
 // POST - receive form submission // redirects to /urls/:id
 
 app.post("/urls", (req, res) => {
