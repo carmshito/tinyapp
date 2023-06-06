@@ -20,13 +20,13 @@
     </div>
     <% if (!user) { %>
     <div>
-      <form method="POST" action="/login">
-          <input
-            type="text"
-            name="username"
-            placeholder="Username"
-          />
+      <form method="GET" action="/login">
           <button type="submit">Login</button>
+      </form>
+    </div>
+    <div>
+      <form method="GET" action="/register">
+          <button type="submit">Register</button>
       </form>
     </div>
     <% } else { %>
