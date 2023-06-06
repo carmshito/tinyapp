@@ -19,25 +19,22 @@
       </div>
     </div>
     <% if (!user) { %>
-    <div>
-      <form method="GET" action="/login">
-          <button type="submit">Login</button>
-      </form>
+    <div class="login-link">
+      <a class="nav-item nav-link" href="/login">Login</a>
+    </div>
+    <div class="register-link">
+      <a class="nav-item nav-link" href="/register">Register</a>
     </div>
     <div>
-      <form method="GET" action="/register">
-          <button type="submit">Register</button>
-      </form>
-    </div>
     <% } else { %>
-    <div>
-      <h5>Logged in as: <%= user.email %></h5>
+    <div class="login-info">
+      <a class="login">Logged in as: <%= user.email %></a>
     </div>
-    <div>
+    <div class="logout-button">
       <form method="POST" action="/logout">
-        <button type="submit">Logout</button>
+        <button type="submit" class="btn btn-outline-dark">Logout</button>
       </form>
+      <% } %>
     </div>
-    <% } %>
   </nav>
 </header>
