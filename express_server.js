@@ -50,7 +50,7 @@ const generateRandomString = function() {
 
 app.get("/urls", (req, res) => {
   const templateVars = {
-    user: users,
+    user: users[req.cookies["userID"]],
     urls: urlDatabase
   };
   res.render("urls_index", templateVars);
@@ -60,7 +60,7 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: users
+    user: users[req.cookies["userID"]]
   };
   res.render("urls_new", templateVars);
 });
@@ -69,7 +69,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = {
-    user: users,
+    user: users[req.cookies["userID"]],
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
   };
@@ -146,6 +146,6 @@ app.post("/register", (req, res) => {
 // POST - logout endpoint
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("userID");
   res.redirect("/urls");
 });
