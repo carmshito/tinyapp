@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const morgan = require("morgan");
 
 /////////////////// CONSTANTS ///////////////////
 
@@ -11,6 +12,7 @@ const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true})); // creates/populates req.body
 app.use(cookieParser()); // create/populate req.cookies
+app.use(morgan('dev'));
 
 /////////////////// DATABASE ///////////////////
 
@@ -99,9 +101,16 @@ app.get("/u/:id", (req, res) => {
 
 app.get("/register", (req, res) => {
   const templateVars = {
-    user: users
+    user: users[req.cookies["userID"]]
   };
   res.render("urls_registration", templateVars);
+});
+
+app.get("/login", (req, res) => {
+  const templateVars = {
+    user: users[req.cookies["userID"]]
+  };
+  res.render("urls_login", templateVars);
 });
 
 // POST - receive form submission // redirects to /urls/:id
