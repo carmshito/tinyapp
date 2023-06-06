@@ -167,7 +167,7 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  // [x] if the email and password are empty strings, send a 400 status code 
+  // [x] if the email and password are empty strings, send a 400 status code
   
   if (!email || !password) {
     return res.status(400).send("You must provide an email and password");
