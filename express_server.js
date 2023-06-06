@@ -24,13 +24,13 @@ const urlDatabase = {
 const users = {
   userRandomID: {
     id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    email: "1@1.ca",
+    password: "12",
   },
   user2RandomID: {
     id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
+    email: "2@2.ca",
+    password: "34",
   },
 };
 
@@ -49,9 +49,31 @@ const generateRandomString = () => {
 // Helper function to look up emails
 
 const getUserByEmail = (email, usersDB) => {
-  for (let key in usersDB) {
+  for (const key in usersDB) {
     if (email === usersDB[key].email) {
       return usersDB[key];
+    }
+  }
+  return undefined;
+};
+
+// Helper function to confirm if passwords match
+
+const passwordMatcher = (password, usersDB) => {
+  for (const key in usersDB) {
+    if (password === usersDB[key].password) {
+      return true;
+    }
+  }
+  return undefined;
+};
+
+// Helper function to find user
+
+const findUserID = (email, usersDB) => {
+  for (const key in usersDB) {
+    if (email === usersDB[key].email) {
+      return usersDB[key].id;
     }
   }
   return undefined;
@@ -142,7 +164,30 @@ app.post("/urls/:id", (req, res) => {
 // POST - login endpoint
 
 app.post("/login", (req, res) => {
-  const userID = req.body.userID;
+  const email = req.body.email;
+  const password = req.body.password;
+
+  // [x] if the email and password are empty strings, send a 400 status code 
+  
+  if (!email || !password) {
+    return res.status(400).send("You must provide an email and password");
+  }
+
+  // [x] if a user with that email cannot be found, return a 403 status code
+  
+  if (!getUserByEmail(email, users)) {
+    return res.status(403).send("This email is not registered");
+  }
+
+  // [x] if a user with that email is located, compare the password given in the form with the existing user's pswd, if it doesn't match, return 403 status code
+  
+  if (!passwordMatcher(password, users)) {
+    return res.status(403).send("The email or password does not match");
+  }
+
+  // [x] if both checks pass, set userID cookie with the matching user's random ID and redirect to /urls
+  const userID = findUserID(email, users);
+  
   res.cookie("userID", userID);
   res.redirect("/urls");
 });
@@ -182,5 +227,5 @@ app.post("/register", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie("userID");
-  res.redirect("/urls");
+  res.redirect("/login");
 });
