@@ -38,10 +38,21 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-// Function to generate random short URL
+// Helper function to generate random short URL
 
-const generateRandomString = function() {
+const generateRandomString = () => {
   return Math.random().toString(36).substring(2, 8);
+};
+
+// Helper function to look up emails
+
+const getUserByEmail = (email, usersDB) => {
+  for (let key in usersDB) {
+    if (email === usersDB[key].email) {
+      return usersDB[key];
+    }
+  }
+  return undefined;
 };
 
 /////////////////// ROUTES ///////////////////
@@ -130,16 +141,31 @@ app.post("/login", (req, res) => {
 // POST - register endpoint
 
 app.post("/register", (req, res) => {
+
   const userID = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
+
+  // [x] if the email and password are empty strings, send a 400 status code
+  if (!email || !password) {
+    return res.status(400).send("You must provide an email and password");
+  }
+
+  // [x] if someone registers with an email in the users object, send a 400 status code
+
+  if (getUserByEmail(email, users)) {
+    return res.status(400).send("There is an account already registered with this email");
+  }
+
+  //////////////////////////////////////////
+
   users[userID] = {
     id: userID,
     email: email,
     password: password
   };
   res.cookie("userID", userID);
-  console.log(users);
+  console.log(users); // print user object
   res.redirect("/urls");
 });
 
