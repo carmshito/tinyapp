@@ -2,11 +2,11 @@ const generateRandomString = () => {
   return Math.random().toString(36).substring(2, 8);
 };
 
-// Helper function to look up emails
+// Helper function to look up user by email
 const getUserByEmail = (email, usersDB) => {
   for (const key in usersDB) {
     if (email === usersDB[key].email) {
-      return usersDB[key];
+      return usersDB[key].id;
     }
   }
   return undefined;
