@@ -236,15 +236,14 @@ app.post("/login", (req, res) => {
   }
 
   const user = getUserByEmail(email, users);
-  const userID = user.id;
   
   // if a user with that email is located, compare the password given in the form with the existing user's pswd, if it doesn't match, return 403 status code
-  if (!bcrypt.compareSync(password, user.password)) {
+  if (!bcrypt.compareSync(password, users[user].password)) {
     return res.status(403).send("The email or password does not match");
   }
   
   // if both checks pass, set userID cookie with the matching user's random ID and redirect to /urls
-  req.session.userID = userID;
+  req.session.userID = user;
   res.redirect("/urls");
 });
 
