@@ -1,5 +1,5 @@
 const express = require("express");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const morgan = require("morgan");
 const bcrypt = require("bcryptjs");
 const salt = bcrypt.genSaltSync(10);
@@ -13,7 +13,10 @@ const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true})); // creates/populates req.body
-app.use(cookieParser()); // create/populate req.cookies
+app.use(cookieSession({
+  name: "session",
+  keys: ["ZUKOTOPHBUMIMILO"]
+}));
 app.use(morgan('dev'));
 
 /////////////////// DATABASE ///////////////////
@@ -33,12 +36,12 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "1@1.ca",
-    password: "12",
+    password: bcrypt.hashSync("12", salt),
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "2@2.ca",
-    password: "34",
+    password: bcrypt.hashSync("34", salt),
   },
 };
 
@@ -79,14 +82,14 @@ const urlsForUser = (id, urlDatabase) => {
 
 // GET - display URL index
 app.get("/urls", (req, res) => {
-  const userID = req.cookies["userID"];
+  const userID = req.session.userID;
   if (!userID) {
     res.status(401).send("Please log in or register to access URLs");
     return;
   }
   const urls = urlsForUser(userID, urlDatabase);
   const templateVars = {
-    user: users[req.cookies["userID"]],
+    user: users[userID],
     urls
   };
   res.render("urls_index", templateVars);
@@ -94,20 +97,20 @@ app.get("/urls", (req, res) => {
 
 // GET - display new URL submission for logged in
 app.get("/urls/new", (req, res) => {
-  const userID = req.cookies["userID"];
+  const userID = req.session.userID;
   if (!userID) {
     res.redirect("/login");
     return;
   }
   const templateVars = {
-    user: users[req.cookies["userID"]]
+    user: users[userID]
   };
   res.render("urls_new", templateVars);
 });
 
 // GET - display single URL
 app.get("/urls/:id", (req, res) => {
-  const userID = req.cookies["userID"];
+  const userID = req.session.userID;
   if (!userID) {
     res.status(401).send("Please log in or register to access URLs");
     return;
@@ -125,7 +128,7 @@ app.get("/urls/:id", (req, res) => {
   }
 
   const templateVars = {
-    user: users[req.cookies["userID"]],
+    user: users[userID],
     id: req.params.id,
     longURL: urlDatabase[req.params.id].longURL,
   };
@@ -145,10 +148,10 @@ app.get("/u/:id", (req, res) => {
 
 // GET - register new users
 app.get("/register", (req, res) => {
-  const userID = req.cookies["userID"];
+  const userID = req.session.userID;
   if (!userID) {
     const templateVars = {
-      user: users[req.cookies["userID"]]
+      user: users[userID]
     };
     res.render("urls_registration", templateVars);
     return;
@@ -158,10 +161,10 @@ app.get("/register", (req, res) => {
 
 // GET - login
 app.get("/login", (req, res) => {
-  const userID = req.cookies["userID"];
+  const userID = req.session.userID;
   if (!userID) {
     const templateVars = {
-      user: users[req.cookies["userID"]]
+      user: users[userID]
     };
     res.render("urls_login", templateVars);
     return;
@@ -171,7 +174,7 @@ app.get("/login", (req, res) => {
 
 // POST - receive form submission // redirects to /urls/:id
 app.post("/urls", (req, res) => {
-  const userID = req.cookies["userID"];
+  const userID = req.session.userID;
   if (!userID) {
     res.status(401).send("You must be logged in to use TinyApp!");
     return;
@@ -187,7 +190,7 @@ app.post("/urls", (req, res) => {
 
 // POST - deletes a URL
 app.post("/urls/:id/delete", (req, res) => {
-  const userID = req.cookies["userID"];
+  const userID = req.session.userID;
   const id = req.params.id;
 
   // [x] should return a relevant error message if the user is not logged in
@@ -214,7 +217,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // POST - updates a URL resource
 app.post("/urls/:id", (req, res) => {
-  const userID = req.cookies["userID"];
+  const userID = req.session.userID;
   const id = req.params.id;
   const updatedURL = req.body.updatedURL;
 
@@ -264,7 +267,7 @@ app.post("/login", (req, res) => {
   }
   
   // [x] if both checks pass, set userID cookie with the matching user's random ID and redirect to /urls
-  res.cookie("userID", userID);
+  req.session.userID = userID;
   res.redirect("/urls");
 });
 
@@ -290,7 +293,7 @@ app.post("/register", (req, res) => {
     email,
     password
   };
-  res.cookie("userID", userID);
+  req.session.userID = userID;
   console.log(users); // print user object
   res.redirect("/urls");
 });
@@ -298,6 +301,6 @@ app.post("/register", (req, res) => {
 // POST - logout endpoint
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("userID");
+  req.session = null;
   res.redirect("/login");
 });
