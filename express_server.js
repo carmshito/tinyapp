@@ -1,6 +1,8 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
+const bcrypt = require("bcryptjs");
+const salt = bcrypt.genSaltSync(10);
 
 /////////////////// CONSTANTS ///////////////////
 
@@ -56,26 +58,6 @@ const getUserByEmail = (email, usersDB) => {
   for (const key in usersDB) {
     if (email === usersDB[key].email) {
       return usersDB[key];
-    }
-  }
-  return undefined;
-};
-
-// Helper function to confirm if passwords match
-const passwordMatcher = (password, usersDB) => {
-  for (const key in usersDB) {
-    if (password === usersDB[key].password) {
-      return true;
-    }
-  }
-  return undefined;
-};
-
-// Helper function to find user
-const findUserID = (email, usersDB) => {
-  for (const key in usersDB) {
-    if (email === usersDB[key].email) {
-      return usersDB[key].id;
     }
   }
   return undefined;
@@ -273,14 +255,15 @@ app.post("/login", (req, res) => {
     return res.status(403).send("This email is not registered");
   }
 
+  const user = getUserByEmail(email, users);
+  const userID = user.id;
+  
   // [x] if a user with that email is located, compare the password given in the form with the existing user's pswd, if it doesn't match, return 403 status code
-  if (!passwordMatcher(password, users)) {
+  if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send("The email or password does not match");
   }
-
-  // [x] if both checks pass, set userID cookie with the matching user's random ID and redirect to /urls
-  const userID = findUserID(email, users);
   
+  // [x] if both checks pass, set userID cookie with the matching user's random ID and redirect to /urls
   res.cookie("userID", userID);
   res.redirect("/urls");
 });
@@ -290,7 +273,7 @@ app.post("/register", (req, res) => {
 
   const userID = generateRandomString();
   const email = req.body.email;
-  const password = req.body.password;
+  const password = bcrypt.hashSync(req.body.password, salt);
 
   // [x] if the email and password are empty strings, send a 400 status code
   if (!email || !password) {
@@ -298,15 +281,14 @@ app.post("/register", (req, res) => {
   }
 
   // [x] if someone registers with an email in the users object, send a 400 status code
-
   if (getUserByEmail(email, users)) {
     return res.status(400).send("There is an account already registered with this email");
   }
   
   users[userID] = {
     id: userID,
-    email: email,
-    password: password
+    email,
+    password
   };
   res.cookie("userID", userID);
   console.log(users); // print user object
