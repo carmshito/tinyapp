@@ -1,15 +1,25 @@
+/////////////////// SERVER CONSTANTS ///////////////////
+
 const express = require("express");
+const app = express();
+const PORT = 8080; // default port 8080
+
+/////////////////// LISTENER ///////////////////
+
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+
+/////////////////// HELPER FUNCTIONS ///////////////////
+
+const { generateRandomString, getUserByEmail, urlsForUser } = require("./helpers");
+
+/////////////////// MIDDLEWARE ///////////////////
+
 const cookieSession = require("cookie-session");
 const morgan = require("morgan");
 const bcrypt = require("bcryptjs");
 const salt = bcrypt.genSaltSync(10);
-
-/////////////////// CONSTANTS ///////////////////
-
-const app = express();
-const PORT = 8080; // default port 8080
-
-/////////////////// MIDDLEWARE ///////////////////
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true})); // creates/populates req.body
@@ -19,7 +29,7 @@ app.use(cookieSession({
 }));
 app.use(morgan('dev'));
 
-/////////////////// DATABASE ///////////////////
+/////////////////// DATABASES (for testing) ///////////////////
 
 const urlDatabase = {
   "b2xVn2": {
@@ -43,39 +53,6 @@ const users = {
     email: "2@2.ca",
     password: bcrypt.hashSync("34", salt),
   },
-};
-
-/////////////////// LISTENER ///////////////////
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
-// Helper function to generate random short URL
-const generateRandomString = () => {
-  return Math.random().toString(36).substring(2, 8);
-};
-
-// Helper function to look up emails
-const getUserByEmail = (email, usersDB) => {
-  for (const key in usersDB) {
-    if (email === usersDB[key].email) {
-      return usersDB[key];
-    }
-  }
-  return undefined;
-};
-
-// Helper function to return URLs that belong to the correct userID
-
-const urlsForUser = (id, urlDatabase) => {
-  let userURLs = {};
-  for (const shortURL in urlDatabase) {
-    if (id === urlDatabase[shortURL].userID) {
-      userURLs[shortURL] = urlDatabase[shortURL];
-    }
-  }
-  return userURLs;
 };
 
 /////////////////// ROUTES ///////////////////
@@ -193,19 +170,19 @@ app.post("/urls/:id/delete", (req, res) => {
   const userID = req.session.userID;
   const id = req.params.id;
 
-  // [x] should return a relevant error message if the user is not logged in
+  // should return a relevant error message if the user is not logged in
   if (!userID) {
     res.status(401).send("Please log in or register to access URLs");
     return;
   }
 
-  // [x] should return a relevant error message if id does not exist
+  // should return a relevant error message if id does not exist
   if (!urlDatabase[id]) {
     res.status(404).send("This URL does not exist");
     return;
   }
 
-  // [x] should return a relevant error message if the user does not own the URL
+  // should return a relevant error message if the user does not own the URL
   if (userID !== urlDatabase[id].userID) {
     res.status(401).send("You are not permitted to delete this URL");
     return;
@@ -221,19 +198,19 @@ app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   const updatedURL = req.body.updatedURL;
 
-  // [x] should return a relevant error message if the user is not logged in
+  // should return a relevant error message if the user is not logged in
   if (!userID) {
     res.status(401).send("Please log in or register to access URLs");
     return;
   }
 
-  // [x] should return a relevant error message if id does not exist
+  // should return a relevant error message if id does not exist
   if (!urlDatabase[id]) {
     res.status(404).send("This URL does not exist");
     return;
   }
 
-  // [x] should return a relevant error message if the user does not own the URL
+  // should return a relevant error message if the user does not own the URL
   if (userID !== urlDatabase[id].userID) {
     res.status(401).send("You are not permitted to edit this URL");
     return;
@@ -248,12 +225,12 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  // [x] if the email and password are empty strings, send a 400 status code
+  // if the email and password are empty strings, send a 400 status code
   if (!email || !password) {
     return res.status(400).send("You must provide an email and password");
   }
 
-  // [x] if a user with that email cannot be found, return a 403 status code
+  // if a user with that email cannot be found, return a 403 status code
   if (!getUserByEmail(email, users)) {
     return res.status(403).send("This email is not registered");
   }
@@ -261,12 +238,12 @@ app.post("/login", (req, res) => {
   const user = getUserByEmail(email, users);
   const userID = user.id;
   
-  // [x] if a user with that email is located, compare the password given in the form with the existing user's pswd, if it doesn't match, return 403 status code
+  // if a user with that email is located, compare the password given in the form with the existing user's pswd, if it doesn't match, return 403 status code
   if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send("The email or password does not match");
   }
   
-  // [x] if both checks pass, set userID cookie with the matching user's random ID and redirect to /urls
+  // if both checks pass, set userID cookie with the matching user's random ID and redirect to /urls
   req.session.userID = userID;
   res.redirect("/urls");
 });
@@ -278,12 +255,12 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = bcrypt.hashSync(req.body.password, salt);
 
-  // [x] if the email and password are empty strings, send a 400 status code
+  // if the email and password are empty strings, send a 400 status code
   if (!email || !password) {
     return res.status(400).send("You must provide an email and password");
   }
 
-  // [x] if someone registers with an email in the users object, send a 400 status code
+  // if someone registers with an email in the users object, send a 400 status code
   if (getUserByEmail(email, users)) {
     return res.status(400).send("There is an account already registered with this email");
   }
@@ -294,7 +271,6 @@ app.post("/register", (req, res) => {
     password
   };
   req.session.userID = userID;
-  console.log(users); // print user object
   res.redirect("/urls");
 });
 
