@@ -17,8 +17,14 @@ app.use(morgan('dev'));
 /////////////////// DATABASE ///////////////////
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "userRandomID",
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "user2RandomID",
+  },
 };
 
 const users = {
@@ -75,13 +81,31 @@ const findUserID = (email, usersDB) => {
   return undefined;
 };
 
+// Helper function to return URLs that belong to the correct userID
+
+const urlsForUser = (id, urlDatabase) => {
+  let userURLs = {};
+  for (const shortURL in urlDatabase) {
+    if (id === urlDatabase[shortURL].userID) {
+      userURLs[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return userURLs;
+};
+
 /////////////////// ROUTES ///////////////////
 
 // GET - display URL index
 app.get("/urls", (req, res) => {
+  const userID = req.cookies["userID"];
+  if (!userID) {
+    res.status(401).send("Please log in or register to access URLs");
+    return;
+  }
+  const urls = urlsForUser(userID, urlDatabase);
   const templateVars = {
     user: users[req.cookies["userID"]],
-    urls: urlDatabase
+    urls
   };
   res.render("urls_index", templateVars);
 });
@@ -101,15 +125,27 @@ app.get("/urls/new", (req, res) => {
 
 // GET - display single URL
 app.get("/urls/:id", (req, res) => {
-  const existingURL = urlDatabase[req.params.id];
-  if (!existingURL) {
-    res.send("This short URL does not exist!");
+  const userID = req.cookies["userID"];
+  if (!userID) {
+    res.status(401).send("Please log in or register to access URLs");
     return;
   }
+  
+  const existingURL = urlDatabase[req.params.id];
+  if (!existingURL) {
+    res.status(401).send("This short URL does not exist!");
+    return;
+  }
+
+  if (existingURL.userID !== userID) {
+    res.status(401).send("This URL does not belong to you");
+    return;
+  }
+
   const templateVars = {
     user: users[req.cookies["userID"]],
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id].longURL,
   };
   res.render("urls_show", templateVars);
   console.log(urlDatabase);
@@ -117,7 +153,7 @@ app.get("/urls/:id", (req, res) => {
 
 // GET - handle shortURL requests to redirect to its longURL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   if (!longURL) {
     res.send("This short URL does not exist!");
     return;
@@ -160,21 +196,64 @@ app.post("/urls", (req, res) => {
   }
   const longURL = req.body.longURL;
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = {
+    longURL,
+    userID,
+  };
   res.redirect(`/urls/${shortURL}`);
 });
 
 // POST - deletes a URL
 app.post("/urls/:id/delete", (req, res) => {
+  const userID = req.cookies["userID"];
   const id = req.params.id;
+
+  // [x] should return a relevant error message if the user is not logged in
+  if (!userID) {
+    res.status(401).send("Please log in or register to access URLs");
+    return;
+  }
+
+  // [x] should return a relevant error message if id does not exist
+  if (!urlDatabase[id]) {
+    res.status(404).send("This URL does not exist");
+    return;
+  }
+
+  // [x] should return a relevant error message if the user does not own the URL
+  if (userID !== urlDatabase[id].userID) {
+    res.status(401).send("You are not permitted to delete this URL");
+    return;
+  }
+
   delete urlDatabase[id];
   res.redirect("/urls");
 });
 
 // POST - updates a URL resource
 app.post("/urls/:id", (req, res) => {
+  const userID = req.cookies["userID"];
   const id = req.params.id;
   const updatedURL = req.body.updatedURL;
+
+  // [x] should return a relevant error message if the user is not logged in
+  if (!userID) {
+    res.status(401).send("Please log in or register to access URLs");
+    return;
+  }
+
+  // [x] should return a relevant error message if id does not exist
+  if (!urlDatabase[id]) {
+    res.status(404).send("This URL does not exist");
+    return;
+  }
+
+  // [x] should return a relevant error message if the user does not own the URL
+  if (userID !== urlDatabase[id].userID) {
+    res.status(401).send("You are not permitted to edit this URL");
+    return;
+  }
+
   urlDatabase[id] = updatedURL;
   res.redirect("/urls");
 });
