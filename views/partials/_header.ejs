@@ -28,11 +28,13 @@
     <div>
     <% } else { %>
     <div class="login-info">
-      <a class="login">Logged in as: <%= user.email %></a>
+      <span class="navbar-text mr-3">
+        Logged in as: <%= user.email %>
+      </span>
     </div>
     <div class="logout-button">
-      <form method="POST" action="/logout">
-        <button type="submit" class="btn btn-outline-dark">Logout</button>
+      <form method="POST" action="/logout" class="form-inline">
+        <button type="submit" class="btn btn-outline-light my-2 my-sm-0">Logout</button>
       </form>
       <% } %>
     </div>
