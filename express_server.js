@@ -262,7 +262,6 @@ app.post("/register", (req, res) => {
 });
 
 // POST - logout endpoint
-
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/login");
