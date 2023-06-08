@@ -36,6 +36,16 @@ const users = {};
 
 /////////////////// ROUTES ///////////////////
 
+// GET - homepage
+app.get("/", (req, res) => {
+  const userID = req.session.userID;
+  if (!userID) {
+    res.redirect("/login");
+  } else {
+    res.redirect("/urls");
+  }
+});
+
 // GET - display URL index
 app.get("/urls", (req, res) => {
   const userID = req.session.userID;
