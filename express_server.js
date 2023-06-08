@@ -31,29 +31,8 @@ app.use(morgan('dev'));
 
 /////////////////// DATABASES (for testing) ///////////////////
 
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: "userRandomID",
-  },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: "user2RandomID",
-  },
-};
-
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "1@1.ca",
-    password: bcrypt.hashSync("12", salt),
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "2@2.ca",
-    password: bcrypt.hashSync("34", salt),
-  },
-};
+const urlDatabase = {};
+const users = {};
 
 /////////////////// ROUTES ///////////////////
 
@@ -110,7 +89,6 @@ app.get("/urls/:id", (req, res) => {
     longURL: urlDatabase[req.params.id].longURL,
   };
   res.render("urls_show", templateVars);
-  console.log(urlDatabase);
 });
 
 // GET - handle shortURL requests to redirect to its longURL
@@ -216,7 +194,7 @@ app.post("/urls/:id", (req, res) => {
     return;
   }
 
-  urlDatabase[id] = updatedURL;
+  urlDatabase[id]["longURL"] = updatedURL;
   res.redirect("/urls");
 });
 
